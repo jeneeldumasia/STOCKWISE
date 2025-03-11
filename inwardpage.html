@@ -1,0 +1,263 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Inward Entry</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        .main-content{
+            font-family: Arial, sans-serif;
+        }
+
+        body {
+            background-color: #f5f6fa;
+        }
+
+        .form-container {
+            max-width: 800px;
+            margin: 40px auto;
+            padding: 30px;
+            background-color: white;
+            border-radius: 10px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+
+        .form-title {
+            color: #2c3e50;
+            margin-bottom: 30px;
+            padding-bottom: 10px;
+            border-bottom: 2px solid #f1f1f1;
+        }
+
+        .form-group {
+            margin-bottom: 20px;
+        }
+
+        label {
+            display: block;
+            margin-bottom: 8px;
+            color: #2c3e50;
+            font-weight: bold;
+        }
+
+        input[type="text"],
+        input[type="date"],
+        input[type="number"],
+        select {
+            width: 100%;
+            padding: 12px;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            font-size: 16px;
+            transition: border-color 0.3s;
+        }
+
+        input[type="text"]:focus,
+        input[type="date"]:focus,
+        input[type="number"]:focus,
+        select:focus {
+            outline: none;
+            border-color: #3498db;
+        }
+
+        .submit-btn {
+            background-color: #2ecc71;
+            color: white;
+            padding: 12px 24px;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 16px;
+            transition: background-color 0.3s;
+        }
+
+        .submit-btn:hover {
+            background-color: #27ae60;
+        }
+
+        .back-btn {
+            background-color: #95a5a6;
+            color: white;
+            padding: 12px 24px;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 16px;
+            margin-right: 10px;
+            transition: background-color 0.3s;
+        }
+
+        .back-btn:hover {
+            background-color: #7f8c8d;
+        }
+
+        .button-group {
+            margin-top: 30px;
+            display: flex;
+            gap: 10px;
+        }
+
+        .container {
+            display: flex;
+            min-height: 100vh;
+        }
+
+        .main-content {
+            flex: 1;
+            padding: 20px;
+            background-color: #f5f6fa;
+        }
+
+        .form-container {
+            max-width: 800px;
+            margin: 0 auto;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div id="menu-bar"></div>
+        <div class="main-content">
+            <div class="form-container">
+                <h1 class="form-title">New Inward Entry</h1>
+                <form id="inwardForm">
+                    <div class="form-group">
+                        <label for="inwardDate">Inward Date:</label>
+                        <input type="date" id="inwardDate" name="inwardDate" required>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="party">Party Name:</label>
+                        <select id="party" name="party" required>
+                            <option value="">Select party</option>
+                            <option value="Party A">Party A</option>
+                            <option value="Party B">Party B</option>
+                            <option value="Party C">Party C</option>
+                            <option value="Party D">Party D</option>
+                            <option value="Party E">Party E</option>
+                            <option value="Other">Other</option>
+                        </select>
+                    </div>
+
+                    <div class="form-group" id="otherPartyGroup" style="display: none;">
+                        <label for="otherParty">Other Party Name:</label>
+                        <input type="text" id="otherParty" name="otherParty" placeholder="Enter other party name">
+                    </div>
+
+                    <div class="form-group">
+                        <label for="commodity">Commodity:</label>
+                        <select id="commodity" name="commodity" required>
+                            <option value="">Select commodity</option>
+                            <option value="Cotton">Cotton</option>
+                            <option value="Wool">Wool</option>
+                            <option value="Sandal">Sandal</option>
+                            <option value="Silk">Silk</option>
+                            <option value="Linen">Linen</option>
+                            <option value="Polyester">Polyester</option>
+                        </select>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="weight">Weight (kg):</label>
+                        <input type="number" id="weight" name="weight" min="0" step="0.01" placeholder="Enter weight in kg" required>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="marking">Marking:</label>
+                        <input type="text" id="marking" name="marking" placeholder="Enter marking" required>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="quantity">Quantity:</label>
+                        <input type="number" id="quantity" name="quantity" min="1" placeholder="Enter quantity" required>
+                    </div>
+
+                    <div class="button-group">
+                        <button type="button" class="back-btn" onclick="window.location.href='dashboard2.html'">
+                            <i class="fas fa-arrow-left"></i> Back
+                        </button>
+                        <button type="submit" class="submit-btn">
+                            <i class="fas fa-save"></i> Save Entry
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        fetch('menu.html')
+            .then(response => response.text())
+            .then(data => {
+                document.getElementById('menu-bar').innerHTML = data;
+
+                // Add active class to menu items
+                const menuItems = document.querySelectorAll('.menu-item');
+                menuItems.forEach(item => {
+                    item.addEventListener('click', function() {
+                        menuItems.forEach(item => item.classList.remove('active'));
+                        this.classList.add('active');
+                    });
+                });
+
+                // Set the active menu item for this page
+                document.getElementById('menu-inward').classList.add('active');
+
+                // Add sidebar toggle functionality
+                const toggleBtn = document.querySelector('.toggle-btn');
+                const sidebar = document.querySelector('.sidebar');
+                const toggleIcon = toggleBtn.querySelector('i');
+
+                toggleBtn.addEventListener('click', () => {
+                    sidebar.classList.toggle('collapsed');
+                    
+                    // Change icon direction
+                    if (sidebar.classList.contains('collapsed')) {
+                        toggleIcon.classList.remove('fa-chevron-left');
+                        toggleIcon.classList.add('fa-chevron-right');
+                    } else {
+                        toggleIcon.classList.remove('fa-chevron-right');
+                        toggleIcon.classList.add('fa-chevron-left');
+                    }
+                });
+            });
+
+        // Form submission handler
+        document.getElementById('inwardForm').addEventListener('submit', function(e) {
+            e.preventDefault();
+            alert('Form submitted successfully!');
+            window.location.href = 'dashboard.html';
+        });
+
+        // Show/hide "Other Party Name" field based on selection
+        document.getElementById('party').addEventListener('change', function() {
+            const otherPartyGroup = document.getElementById('otherPartyGroup');
+            if (this.value === 'Other') {
+                otherPartyGroup.style.display = 'block';
+            } else {
+                otherPartyGroup.style.display = 'none';
+            }
+        });
+
+        // Add party dropdown functionality
+        const partySelect = document.getElementById('party');
+        const otherPartyGroup = document.getElementById('otherPartyGroup');
+
+        partySelect.addEventListener('change', function() {
+            if (this.value === 'Other') {
+                otherPartyGroup.style.display = 'block';
+                document.getElementById('otherParty').required = true;
+            } else {
+                otherPartyGroup.style.display = 'none';
+                document.getElementById('otherParty').required = false;
+            }
+        });
+    </script>
+</body>
+</html>
