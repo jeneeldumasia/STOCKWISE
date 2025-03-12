@@ -5,7 +5,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css">
-    <title>Test Page</title>
+    <title>LOGIN PAGE</title>
     
     <style>
         /* Internal CSS */
@@ -210,23 +210,23 @@
 <body>
     <div class="container" id="container">
         <div class="form-container sign-up">
-            <form action="https://getform.io/f/navvmpga" method="POST">
+            <form id="signupForm">
                 <h1>Create Account</h1>
                 <span>or use your email for registration</span>
                 <input type="text" name="name" placeholder="Name">
                 <input type="email" name="email" placeholder="Email">
                 <input type="password" name="password" placeholder="Password">
-                <button>Sign Up</button>
+                <button type="submit">Sign Up</button>
             </form>
         </div>
         <div class="form-container sign-in">
-            <form>
+            <form id="signinForm">
                 <h1>Sign In</h1>
                 <span>or use your email password</span>
-                <input type="email" placeholder="Email">
-                <input type="password" placeholder="Password">
+                <input type="email" name="email" placeholder="Email">
+                <input type="password" name="password" placeholder="Password">
                 <a href="#">Forget Your Password?</a>
-                <button>Sign In</button>
+                <button type="submit">Sign In</button>
             </form>
         </div>
         <div class="toggle-container">
@@ -245,12 +245,14 @@
         </div>
     </div>
 
+    <script src="js/apiService.js"></script>
     <script>
         // Internal JavaScript
         const container = document.getElementById('container');
         const registerBtn = document.getElementById('register');
         const loginBtn = document.getElementById('login');
-        const signInForm = document.querySelector('.sign-in form');
+        const signInForm = document.getElementById('signinForm');
+        const signUpForm = document.getElementById('signupForm');
 
         registerBtn.addEventListener('click', () => {
             container.classList.add("active");
@@ -260,10 +262,102 @@
             container.classList.remove("active");
         });
 
-        signInForm.addEventListener('submit', (event) => {
+        // Handle sign-in with actual authentication
+        signInForm.addEventListener('submit', async (event) => {
             event.preventDefault();
-            window.location.href = "courses.html";
+            
+            const email = signInForm.querySelector('input[name="email"]').value;
+            const password = signInForm.querySelector('input[name="password"]').value;
+            
+            try {
+                // Try using the API service
+                const response = await fetch('http://localhost:5001/api/auth/login', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({ email, password })
+                });
+                
+                const result = await response.json();
+                console.log("Login response:", response.status, result);
+                
+                if (!response.ok) {
+                    // Show the actual error message from the server
+                    alert(`Login failed: ${result.error || 'Unknown error'}`);
+                    return;
+                }
+                
+                // Store the JWT token
+                localStorage.setItem('authToken', result.token);
+                localStorage.setItem('userName', result.user.name);
+                
+                // Redirect to dashboard
+                window.location.href = "dashboard.html";
+            } catch (error) {
+                console.error("Full login error:", error);
+                alert(`Login error: ${error.message}`);
+            }
         });
+        
+        // Add sign-up functionality
+        signUpForm.addEventListener('submit', async (event) => {
+            event.preventDefault();
+            
+            const name = signUpForm.querySelector('input[name="name"]').value;
+            const email = signUpForm.querySelector('input[name="email"]').value;
+            const password = signUpForm.querySelector('input[name="password"]').value;
+            
+            // Simple validation
+            if (!name || !email || !password) {
+                alert('Please fill all fields');
+                return;
+            }
+            
+            try {
+                // Use the API service instead of direct fetch
+                const result = await api.auth.register({
+                    name,
+                    email,
+                    password
+                });
+                
+                if (result.error) {
+                    alert(`Registration failed: ${result.error}`);
+                    return;
+                }
+                
+                alert('Registration successful! Please login with your credentials.');
+                
+                // Switch to sign-in form
+                container.classList.remove("active");
+                
+                // Pre-fill the email in signin form for convenience
+                const signinEmail = signInForm.querySelector('input[name="email"]');
+                if (signinEmail) {
+                    signinEmail.value = email;
+                }
+                
+                // Focus on password field
+                const signinPassword = signInForm.querySelector('input[name="password"]');
+                if (signinPassword) {
+                    signinPassword.focus();
+                }
+                
+            } catch (error) {
+                if (error.message === 'Failed to fetch') {
+                    alert('Network error: Please check if the server is running');
+                } else {
+                    alert(`Registration error: ${error.message}`);
+                    console.error("Full error:", error);
+                }
+            }
+        });
+
+        // Redirect to dashboard if already logged in
+        if (localStorage.getItem('authToken')) {
+            window.location.href = "dashboard.html";
+        }
     </script>
 </body>
 

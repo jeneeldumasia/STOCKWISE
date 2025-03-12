@@ -191,48 +191,104 @@
         </div>
     </div>
 
+    <script src="js/apiService.js"></script>
     <script>
-        fetch('menu.html')
-            .then(response => response.text())
-            .then(data => {
-                document.getElementById('menu-bar').innerHTML = data;
+        // Check if user is logged in, redirect if not
+        document.addEventListener('DOMContentLoaded', function() {
+            if (!requireAuth()) return;
+            
+            // Rest of initialization code
+            fetch('menu.html')
+                .then(response => response.text())
+                .then(data => {
+                    document.getElementById('menu-bar').innerHTML = data;
 
-                // Add active class to menu items
-                const menuItems = document.querySelectorAll('.menu-item');
-                menuItems.forEach(item => {
-                    item.addEventListener('click', function() {
-                        menuItems.forEach(item => item.classList.remove('active'));
-                        this.classList.add('active');
+                    // Add active class to menu items
+                    const menuItems = document.querySelectorAll('.menu-item');
+                    menuItems.forEach(item => {
+                        item.addEventListener('click', function() {
+                            menuItems.forEach(item => item.classList.remove('active'));
+                            this.classList.add('active');
+                        });
                     });
+
+                    // Set the active menu item for this page
+                    document.getElementById('menu-inward').classList.add('active');
+
+                    // Add sidebar toggle functionality
+                    const toggleBtn = document.querySelector('.toggle-btn');
+                    const sidebar = document.querySelector('.sidebar');
+                    const toggleIcon = toggleBtn.querySelector('i');
+
+                    toggleBtn.addEventListener('click', () => {
+                        sidebar.classList.toggle('collapsed');
+                        
+                        // Change icon direction
+                        if (sidebar.classList.contains('collapsed')) {
+                            toggleIcon.classList.remove('fa-chevron-left');
+                            toggleIcon.classList.add('fa-chevron-right');
+                        } else {
+                            toggleIcon.classList.remove('fa-chevron-right');
+                            toggleIcon.classList.add('fa-chevron-left');
+                        }
+                    });
+                })
+                .catch(error => {
+                    console.error('Error loading menu:', error);
                 });
+        });
 
-                // Set the active menu item for this page
-                document.getElementById('menu-inward').classList.add('active');
-
-                // Add sidebar toggle functionality
-                const toggleBtn = document.querySelector('.toggle-btn');
-                const sidebar = document.querySelector('.sidebar');
-                const toggleIcon = toggleBtn.querySelector('i');
-
-                toggleBtn.addEventListener('click', () => {
-                    sidebar.classList.toggle('collapsed');
-                    
-                    // Change icon direction
-                    if (sidebar.classList.contains('collapsed')) {
-                        toggleIcon.classList.remove('fa-chevron-left');
-                        toggleIcon.classList.add('fa-chevron-right');
-                    } else {
-                        toggleIcon.classList.remove('fa-chevron-right');
-                        toggleIcon.classList.add('fa-chevron-left');
-                    }
-                });
-            });
-
-        // Form submission handler
-        document.getElementById('inwardForm').addEventListener('submit', function(e) {
+        // Form submission handler using the API service
+        document.getElementById('inwardForm').addEventListener('submit', async function(e) {
             e.preventDefault();
-            alert('Form submitted successfully!');
-            window.location.href = 'dashboard.html';
+            
+            try {
+                // First, validate all required fields
+                const formData = {
+                    inwardDate: document.getElementById('inwardDate').value,
+                    party: document.getElementById('party').value === 'Other' 
+                        ? document.getElementById('otherParty').value 
+                        : document.getElementById('party').value,
+                    commodity: document.getElementById('commodity').value,
+                    weight: parseFloat(document.getElementById('weight').value),
+                    marking: document.getElementById('marking').value,
+                    quantity: parseInt(document.getElementById('quantity').value)
+                };
+                
+                // Check for any missing fields
+                for (const [key, value] of Object.entries(formData)) {
+                    if (!value && value !== 0) {
+                        alert(`Please fill out the ${key} field`);
+                        return;
+                    }
+                }
+
+                console.log('Sending data:', formData);
+                
+                // Use a direct fetch with explicit error handling
+                const response = await fetch('http://localhost:5001/api/inward', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${localStorage.getItem('authToken')}`
+                    },
+                    body: JSON.stringify(formData)
+                });
+                
+                if (!response.ok) {
+                    const errorData = await response.json();
+                    console.error('Server response:', errorData);
+                    throw new Error(errorData.error || `HTTP Error ${response.status}`);
+                }
+                
+                const result = await response.json();
+                console.log('Success:', result);
+                alert('Inward entry created successfully!');
+                window.location.href = 'dashboard.html';
+            } catch (error) {
+                console.error('Error details:', error);
+                alert(`Error creating inward entry: ${error.message}`);
+            }
         });
 
         // Show/hide "Other Party Name" field based on selection

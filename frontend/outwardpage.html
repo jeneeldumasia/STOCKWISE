@@ -193,48 +193,81 @@
         </div>
     </div>
 
+    <script src="js/apiService.js"></script>
     <script>
-        fetch('menu.html')
-            .then(response => response.text())
-            .then(data => {
-                document.getElementById('menu-bar').innerHTML = data;
+        // Check if user is logged in, redirect if not
+        document.addEventListener('DOMContentLoaded', function() {
+            if (!requireAuth()) return;
+            
+            // Rest of initialization code
+            fetch('menu.html')
+                .then(response => response.text())
+                .then(data => {
+                    document.getElementById('menu-bar').innerHTML = data;
 
-                // Add active class to menu items
-                const menuItems = document.querySelectorAll('.menu-item');
-                menuItems.forEach(item => {
-                    item.addEventListener('click', function() {
-                        menuItems.forEach(item => item.classList.remove('active'));
-                        this.classList.add('active');
+                    // Add active class to menu items
+                    const menuItems = document.querySelectorAll('.menu-item');
+                    menuItems.forEach(item => {
+                        item.addEventListener('click', function() {
+                            menuItems.forEach(item => item.classList.remove('active'));
+                            this.classList.add('active');
+                        });
                     });
+
+                    // Set the active menu item for this page
+                    document.getElementById('menu-outward').classList.add('active');
+
+                    // Add sidebar toggle functionality
+                    const toggleBtn = document.querySelector('.toggle-btn');
+                    const sidebar = document.querySelector('.sidebar');
+                    const toggleIcon = toggleBtn.querySelector('i');
+
+                    toggleBtn.addEventListener('click', () => {
+                        sidebar.classList.toggle('collapsed');
+                        
+                        // Change icon direction
+                        if (sidebar.classList.contains('collapsed')) {
+                            toggleIcon.classList.remove('fa-chevron-left');
+                            toggleIcon.classList.add('fa-chevron-right');
+                        } else {
+                            toggleIcon.classList.remove('fa-chevron-right');
+                            toggleIcon.classList.add('fa-chevron-left');
+                        }
+                    });
+                })
+                .catch(error => {
+                    console.error('Error loading menu:', error);
                 });
-
-                // Set the active menu item for this page
-                document.getElementById('menu-outward').classList.add('active');
-
-                // Add sidebar toggle functionality
-                const toggleBtn = document.querySelector('.toggle-btn');
-                const sidebar = document.querySelector('.sidebar');
-                const toggleIcon = toggleBtn.querySelector('i');
-
-                toggleBtn.addEventListener('click', () => {
-                    sidebar.classList.toggle('collapsed');
-                    
-                    // Change icon direction
-                    if (sidebar.classList.contains('collapsed')) {
-                        toggleIcon.classList.remove('fa-chevron-left');
-                        toggleIcon.classList.add('fa-chevron-right');
-                    } else {
-                        toggleIcon.classList.remove('fa-chevron-right');
-                        toggleIcon.classList.add('fa-chevron-left');
-                    }
-                });
-            });
+        });
 
         // Form submission handler
-        document.getElementById('outwardForm').addEventListener('submit', function(e) {
+        document.getElementById('outwardForm').addEventListener('submit', async function(e) {
             e.preventDefault();
-            alert('Form submitted successfully!');
-            window.location.href = 'dashboard.html';
+            
+            try {
+                const formData = {
+                    date: document.getElementById('outwardDate').value,
+                    partyName: document.getElementById('party').value === 'Other' 
+                        ? document.getElementById('otherParty').value 
+                        : document.getElementById('party').value,
+                    commodity: document.getElementById('commodity').value,
+                    weight: parseFloat(document.getElementById('weight').value),
+                    marking: document.getElementById('marking').value,
+                    quantity: parseInt(document.getElementById('quantity').value)
+                };
+
+                // Use API service instead of direct fetch
+                const result = await api.outward.create(formData);
+                
+                if (result.error) {
+                    throw new Error(result.error);
+                }
+                
+                alert('Outward entry created successfully!');
+                window.location.href = 'dashboard.html';
+            } catch (error) {
+                alert(`Error creating outward entry: ${error.message}`);
+            }
         });
 
         // Show/hide "Other Party Name" field based on selection

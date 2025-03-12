@@ -275,43 +275,128 @@
         </div>
     </div>
 
+    <script src="js/apiService.js"></script>
     <script>
-        // Load the menu bar from the external file
-        fetch('menu.html')
-            .then(response => response.text())
-            .then(data => {
-                document.getElementById('menu-bar').innerHTML = data;
-
-                // Add active class to menu items
-                const menuItems = document.querySelectorAll('.menu-item');
-                menuItems.forEach(item => {
-                    item.addEventListener('click', function() {
-                        menuItems.forEach(item => item.classList.remove('active'));
-                        this.classList.add('active');
-                    });
-                });
-
-                // Set the active menu item for this page
-                document.getElementById('menu-dashboard').classList.add('active');
-
-                // Add sidebar toggle functionality
-                const toggleBtn = document.querySelector('.toggle-btn');
-                const sidebar = document.querySelector('.sidebar');
-                const toggleIcon = toggleBtn.querySelector('i');
-
-                toggleBtn.addEventListener('click', () => {
-                    sidebar.classList.toggle('collapsed');
-                    
-                    // Change icon direction
-                    if (sidebar.classList.contains('collapsed')) {
-                        toggleIcon.classList.remove('fa-chevron-left');
-                        toggleIcon.classList.add('fa-chevron-right');
-                    } else {
-                        toggleIcon.classList.remove('fa-chevron-right');
-                        toggleIcon.classList.add('fa-chevron-left');
-                    }
+        // Check if user is logged in
+        document.addEventListener('DOMContentLoaded', async function() {
+            if (!requireAuth()) return;
+            
+            try {
+                // Load the menu bar
+                const menuResponse = await fetch('menu.html');
+                const menuHtml = await menuResponse.text();
+                document.getElementById('menu-bar').innerHTML = menuHtml;
+                
+                // Set up menu functionality
+                setupMenu();
+                
+                // Load dashboard data
+                const dashboardData = await api.dashboard.getData();
+                
+                if (dashboardData.error) {
+                    throw new Error(dashboardData.error);
+                }
+                
+                // Update dashboard with data
+                updateDashboard(dashboardData.data);
+            } catch (error) {
+                console.error('Error loading dashboard:', error);
+                alert(`Error loading dashboard: ${error.message}`);
+            }
+        });
+        
+        function setupMenu() {
+            // Add active class to menu items
+            const menuItems = document.querySelectorAll('.menu-item');
+            menuItems.forEach(item => {
+                item.addEventListener('click', function() {
+                    menuItems.forEach(item => item.classList.remove('active'));
+                    this.classList.add('active');
                 });
             });
+
+            // Set the active menu item for this page
+            document.getElementById('menu-dashboard').classList.add('active');
+
+            // Add sidebar toggle functionality
+            const toggleBtn = document.querySelector('.toggle-btn');
+            const sidebar = document.querySelector('.sidebar');
+            const toggleIcon = toggleBtn.querySelector('i');
+
+            toggleBtn.addEventListener('click', () => {
+                sidebar.classList.toggle('collapsed');
+                
+                // Change icon direction
+                if (sidebar.classList.contains('collapsed')) {
+                    toggleIcon.classList.remove('fa-chevron-left');
+                    toggleIcon.classList.add('fa-chevron-right');
+                } else {
+                    toggleIcon.classList.remove('fa-chevron-right');
+                    toggleIcon.classList.add('fa-chevron-left');
+                }
+            });
+        }
+        
+        function updateDashboard(data) {
+            // Update inward summary
+            const todayInwards = data.recentInwards.filter(inward => {
+                const inwardDate = new Date(inward.inwardDate);
+                const today = new Date();
+                return inwardDate.toDateString() === today.toDateString();
+            });
+            
+            // Sum up quantities
+            const totalInwardItems = todayInwards.reduce((sum, inward) => sum + inward.quantity, 0);
+            document.querySelector('.inward-box .number').textContent = totalInwardItems;
+            
+            // Update outward summary
+            const todayOutwards = data.recentOutwards.filter(outward => {
+                const outwardDate = new Date(outward.date);
+                const today = new Date();
+                return outwardDate.toDateString() === today.toDateString();
+            });
+            
+            const totalOutwardItems = todayOutwards.reduce((sum, outward) => sum + outward.quantity, 0);
+            document.querySelector('.outward-box .number').textContent = totalOutwardItems;
+            
+            // Update inward transactions table
+            updateTransactionTable('.transaction-box:nth-child(1) tbody', data.recentInwards, 'inward');
+            
+            // Update outward transactions table
+            updateTransactionTable('.transaction-box:nth-child(2) tbody', data.recentOutwards, 'outward');
+        }
+        
+        function updateTransactionTable(selector, data, type) {
+            const tableBody = document.querySelector(selector);
+            tableBody.innerHTML = '';
+            
+            // Check if data exists and has items
+            if (!data || data.length === 0) {
+                const row = document.createElement('tr');
+                row.innerHTML = `<td colspan="5">No ${type} transactions found</td>`;
+                tableBody.appendChild(row);
+                return;
+            }
+            
+            // Format date function
+            const formatDate = (dateString) => {
+                const date = new Date(dateString);
+                return date.toISOString().split('T')[0]; // YYYY-MM-DD
+            };
+            
+            // Create rows for each transaction
+            data.forEach(item => {
+                const row = document.createElement('tr');
+                row.innerHTML = `
+                    <td>${formatDate(type === 'inward' ? item.inwardDate : item.date)}</td>
+                    <td>${type === 'inward' ? item.party : item.partyName}</td>
+                    <td>${item.commodity}</td>
+                    <td>${item.marking}</td>
+                    <td>${item.quantity} ${item.weight ? `(${item.weight} kg)` : ''}</td>
+                `;
+                tableBody.appendChild(row);
+            });
+        }
     </script>
 </body>
 </html>
