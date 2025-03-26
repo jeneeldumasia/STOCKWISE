@@ -1,0 +1,204 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Inventory Management</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        .container {
+            display: flex;
+            min-height: 100vh;
+        }
+
+        .main-content {
+            flex: 1;
+            padding: 20px;
+            background-color: #f5f6fa;
+        }
+
+        .inventory-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 20px;
+            background: white;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+            border-radius: 8px;
+            overflow: hidden;
+        }
+
+        .inventory-table th,
+        .inventory-table td {
+            padding: 12px;
+            text-align: left;
+            border-bottom: 1px solid #eee;
+        }
+
+        .inventory-table th {
+            background-color: #2c3e50;
+            color: white;
+        }
+
+        .filter-section {
+            margin-bottom: 20px;
+            display: flex;
+            gap: 10px;
+        }
+
+        .filter-section select {
+            padding: 12px;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            min-width: 200px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div id="menu-bar"></div>
+        <div class="main-content">
+            <h1 class="page-title">Inventory Management</h1>
+            <div class="content-container">
+                <div class="filter-section">
+                    <select id="commodity-filter">
+                        <option value="">All Commodities</option>
+                    </select>
+                    <select id="marking-filter">
+                        <option value="">All Markings</option>
+                    </select>
+                </div>
+                
+                <table class="inventory-table">
+                    <thead>
+                        <tr>
+                            <th>Commodity</th>
+                            <th>Marking</th>
+                            <th>Quantity</th>
+                            <th>Weight (kg)</th>
+                            <th>Last Updated</th>
+                        </tr>
+                    </thead>
+                    <tbody id="inventory-list">
+                        <!-- Inventory items will be loaded here -->
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <script src="js/apiService.js"></script>
+    <script>
+        document.addEventListener('DOMContentLoaded', async function() {
+            if (!requireAuth()) return;
+            
+            try {
+                // Load menu
+                const menuResponse = await fetch('menu.html');
+                const menuHtml = await menuResponse.text();
+                document.getElementById('menu-bar').innerHTML = menuHtml;
+                
+                // Display username
+                const userName = localStorage.getItem('userName');
+                if (userName) {
+                    const userInfo = document.createElement('div');
+                    userInfo.className = 'user-info';
+                    userInfo.innerHTML = `<i class="fas fa-user"></i>${userName}`;
+                    document.querySelector('.sidebar').insertBefore(userInfo, document.querySelector('.menu-list'));
+                }
+                
+                // Set active menu item
+                document.getElementById('menu-inventory').classList.add('active');
+                
+                await loadInventory();
+            } catch (error) {
+                console.error('Error initializing page:', error);
+            }
+        });
+
+        async function loadInventory() {
+            try {
+                const response = await fetch('http://localhost:5001/api/inventory', {
+                    headers: {
+                        'Authorization': `Bearer ${localStorage.getItem('authToken')}`
+                    }
+                });
+
+                if (!response.ok) throw new Error('Failed to fetch inventory');
+
+                const { data: inventory } = await response.json();
+                displayInventory(inventory);
+                updateFilters(inventory);
+            } catch (error) {
+                console.error('Error loading inventory:', error);
+                alert('Failed to load inventory');
+            }
+        }
+
+        function displayInventory(inventory) {
+            const tbody = document.getElementById('inventory-list');
+            tbody.innerHTML = '';
+
+            inventory.forEach(item => {
+                const row = document.createElement('tr');
+                row.innerHTML = `
+                    <td>${item.commodity}</td>
+                    <td>${item.marking}</td>
+                    <td>${item.quantity}</td>
+                    <td>${item.weight}</td>
+                    <td>${new Date(item.updatedAt).toLocaleString()}</td>
+                `;
+                tbody.appendChild(row);
+            });
+        }
+
+        function updateFilters(inventory) {
+            const commodities = [...new Set(inventory.map(item => item.commodity))];
+            const markings = [...new Set(inventory.map(item => item.marking))];
+
+            const commodityFilter = document.getElementById('commodity-filter');
+            const markingFilter = document.getElementById('marking-filter');
+
+            commodities.forEach(commodity => {
+                const option = document.createElement('option');
+                option.value = commodity;
+                option.textContent = commodity;
+                commodityFilter.appendChild(option);
+            });
+
+            markings.forEach(marking => {
+                const option = document.createElement('option');
+                option.value = marking;
+                option.textContent = marking;
+                markingFilter.appendChild(option);
+            });
+        }
+
+        // Add filter functionality
+        document.getElementById('commodity-filter').addEventListener('change', filterInventory);
+        document.getElementById('marking-filter').addEventListener('change', filterInventory);
+
+        function filterInventory() {
+            const commodityFilter = document.getElementById('commodity-filter').value;
+            const markingFilter = document.getElementById('marking-filter').value;
+
+            const rows = document.querySelectorAll('#inventory-list tr');
+            
+            rows.forEach(row => {
+                const commodity = row.cells[0].textContent;
+                const marking = row.cells[1].textContent;
+                
+                const commodityMatch = !commodityFilter || commodity === commodityFilter;
+                const markingMatch = !markingFilter || marking === markingFilter;
+                
+                row.style.display = commodityMatch && markingMatch ? '' : 'none';
+            });
+        }
+    </script>
+</body>
+</html>

@@ -17,6 +17,7 @@ const inwardRoutes = require('./routes/inwardRoutes');
 const outwardRoutes = require('./routes/outwardRoutes');
 const dashboardRoutes = require('./routes/dashboardRoutes');
 const authRoutes = require('./routes/authRoutes');
+const inventoryRoutes = require('./routes/inventoryRoutes');
 const authMiddleware = require('./middleware/authMiddleware');
 
 const app = express();
@@ -57,6 +58,7 @@ app.use('/api/auth', authRoutes);
 app.use('/api/inward', authMiddleware, inwardRoutes);
 app.use('/api/outward', authMiddleware, outwardRoutes);
 app.use('/api/dashboard', authMiddleware, dashboardRoutes);
+app.use('/api/inventory', inventoryRoutes);
 app.get('/api/test', (req, res) => {
     console.log('Test endpoint hit');
     res.json({ message: 'API is working!' });

@@ -11,21 +11,13 @@ const isLoggedIn = () => !!getAuthToken();
 const handleApiError = (error) => {
     console.error('API Error:', error);
     
-    if (error.message === 'Failed to fetch') {
-        return { error: 'Network error - Check your connection and try again' };
-    }
-    
-    // Use the actual error message from the server instead of a generic message
     if (error.status === 401) {
-        // For non-login endpoints, this might be a session expiration
-        if (!error.url || !error.url.includes('/auth/login')) {
-            localStorage.removeItem('authToken');
-            window.location.href = 'login.html';
-            return { error: 'Session expired. Please log in again.' };
-        }
-        
-        // For login endpoint, return the actual error message
-        return { error: error.message || 'Invalid credentials' };
+        // Clear auth data and redirect to login
+        localStorage.removeItem('authToken');
+        localStorage.removeItem('userName');
+        localStorage.removeItem('tokenTimestamp');
+        window.location.replace('login.html');
+        return { error: 'Session expired. Please log in again.' };
     }
     
     return { error: error.message || 'Unknown error occurred' };
@@ -82,7 +74,19 @@ const api = {
         }),
         
         // Verify current token
-        verify: () => fetchApi('/auth/verify')
+        verify: () => fetchApi('/auth/verify'),
+        
+        logout: async () => {
+            try {
+                localStorage.removeItem('authToken');
+                localStorage.removeItem('userName');
+                localStorage.removeItem('tokenTimestamp');
+                return { success: true };
+            } catch (error) {
+                console.error('Logout error:', error);
+                return { error: 'Failed to logout' };
+            }
+        }
     },
     
     // Inward operations
@@ -118,4 +122,16 @@ const requireAuth = () => {
         return false;
     }
     return true;
-}; 
+};
+
+// Add a global logout function
+window.handleLogout = async function() {
+    if (confirm('Are you sure you want to logout?')) {
+        const result = await api.auth.logout();
+        if (result.success) {
+            window.location.replace('login.html');
+        } else {
+            alert('Error during logout. Please try again.');
+        }
+    }
+};

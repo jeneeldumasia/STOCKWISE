@@ -5,8 +5,9 @@ const inwardSchema = new mongoose.Schema({
         type: Date,
         required: true
     },
-    party: {
-        type: String,
+    clientId: {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: 'Client',
         required: true
     },
     commodity: {
@@ -23,6 +24,11 @@ const inwardSchema = new mongoose.Schema({
     },
     quantity: {
         type: Number,
+        required: true
+    },
+    userId: {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: 'User',
         required: true
     }
 }, { timestamps: true });

@@ -1,3 +1,6 @@
+
+
+
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -155,29 +158,25 @@
                     <div class="form-group">
                         <label for="commodity">Commodity:</label>
                         <select id="commodity" name="commodity" required>
-                            <option value="">Select commodity</option>
-                            <option value="Cotton">Cotton</option>
-                            <option value="Wool">Wool</option>
-                            <option value="Sandal">Sandal</option>
-                            <option value="Silk">Silk</option>
-                            <option value="Linen">Linen</option>
-                            <option value="Polyester">Polyester</option>
+                            <option value="">Select a commodity</option>
+                        </select>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="marking">Marking:</label>
+                        <select id="marking" name="marking" required>
+                            <option value="">Select a marking</option>
                         </select>
                     </div>
 
                     <div class="form-group">
                         <label for="weight">Weight (kg):</label>
-                        <input type="number" id="weight" name="weight" min="0" step="0.01" placeholder="Enter weight in kg" required>
-                    </div>
-
-                    <div class="form-group">
-                        <label for="marking">Marking:</label>
-                        <input type="text" id="marking" name="marking" placeholder="Enter marking" required>
+                        <input type="number" id="weight" name="weight" min="0.01" step="0.01" required>
                     </div>
 
                     <div class="form-group">
                         <label for="quantity">Quantity:</label>
-                        <input type="number" id="quantity" name="quantity" min="1" placeholder="Enter quantity" required>
+                        <input type="number" id="quantity" name="quantity" min="1" required>
                     </div>
 
                     <div class="button-group">
@@ -212,6 +211,17 @@
                             menuItems.forEach(item => item.classList.remove('active'));
                             this.classList.add('active');
                         });
+                        const logoutButton = document.getElementById('menu-logout');
+    if (logoutButton) {
+        logoutButton.addEventListener('click', () => {
+            if (confirm('Are you sure you want to logout?')) {
+                localStorage.removeItem('authToken');
+                localStorage.removeItem('userName');
+                localStorage.removeItem('tokenTimestamp');
+                window.location.replace('login.html');
+            }
+        });
+    }
                     });
 
                     // Set the active menu item for this page
@@ -294,5 +304,111 @@
             }
         });
     </script>
+    <script>
+    document.getElementById('outwardForm').addEventListener('submit', async function (e) {
+        e.preventDefault();
+
+        try {
+            const formData = {
+                date: new Date().toISOString(),
+                partyName: document.getElementById('partyName').value,
+                commodity: document.getElementById('commodity').value,
+                marking: document.getElementById('marking').value,
+                quantity: parseInt(document.getElementById('quantity').value),
+                weight: parseFloat(document.getElementById('weight').value)
+            };
+
+            const response = await fetch('http://localhost:5001/api/outward', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${localStorage.getItem('authToken')}`
+                },
+                body: JSON.stringify(formData)
+            });
+
+            if (!response.ok) {
+                const errorData = await response.json();
+                throw new Error(errorData.error || 'Failed to create outward entry');
+            }
+
+            alert('Outward entry created successfully!');
+            window.location.reload();
+        } catch (error) {
+            console.error('Error creating outward entry:', error);
+            alert(`Error: ${error.message}`);
+        }
+    });
+</script>
+    <script>
+        document.addEventListener('DOMContentLoaded', async function () {
+            try {
+                // Fetch inventory from the backend
+                const response = await fetch('http://localhost:5001/api/inventory', {
+                    method: 'GET',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${localStorage.getItem('authToken')}`
+                    }
+                });
+
+                if (!response.ok) {
+                    throw new Error('Failed to fetch inventory');
+                }
+
+                const { data: inventory } = await response.json();
+
+                // Populate the dropdown with inventory items
+                const commodityDropdown = document.getElementById('commodity');
+                const markingDropdown = document.getElementById('marking');
+
+                inventory.forEach(item => {
+                    // Add commodity options
+                    const commodityOption = document.createElement('option');
+                    commodityOption.value = item.commodity;
+                    commodityOption.textContent = item.commodity;
+                    commodityDropdown.appendChild(commodityOption);
+
+                    // Add marking options
+                    const markingOption = document.createElement('option');
+                    markingOption.value = item.marking;
+                    markingOption.textContent = `${item.marking} (Qty: ${item.quantity}, Wt: ${item.weight}kg)`;
+                    markingDropdown.appendChild(markingOption);
+                });
+            } catch (error) {
+                console.error('Error loading inventory:', error);
+                alert('Failed to load inventory. Please try again.');
+            }
+        });
+    </script>
+    <script>
+    function handleLogout() {
+        if (confirm('Are you sure you want to logout?')) {
+            try {
+                // Clear ALL authentication data
+                localStorage.removeItem('authToken');
+                localStorage.removeItem('userName');
+                localStorage.removeItem('tokenTimestamp');
+
+                // Redirect to login page
+                window.location.href = 'login.html';
+            } catch (error) {
+                console.error('Logout error:', error);
+                alert('Error during logout. Please try again.');
+            }
+        }
+    }
+
+    // Make the function globally available
+    window.handleLogout = handleLogout;
+
+    // Attach the logout function to the logout button
+    document.addEventListener('DOMContentLoaded', function () {
+        const logoutButton = document.getElementById('menu-logout');
+        if (logoutButton) {
+            logoutButton.addEventListener('click', handleLogout);
+        }
+    });
+</script>
 </body>
 </html>

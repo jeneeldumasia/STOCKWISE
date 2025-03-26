@@ -86,6 +86,10 @@
     <button class="toggle-btn">
         <i class="fas fa-chevron-left"></i>
     </button>
+    <div class="user-info">
+        <i class="fas fa-user"></i>
+        <span id="current-user"></span>
+    </div>
     <ul class="menu-list">
         <li id="menu-dashboard" class="menu-item" onclick="window.location.href='dashboard.html'">
             <i class="fas fa-home"></i>
@@ -99,13 +103,50 @@
             <i class="fas fa-sign-out-alt"></i>
             <span>Outward</span>
         </li>
+        <li id="menu-inventory" class="menu-item" onclick="window.location.href='inventory.html'">
+            <i class="fas fa-boxes"></i>
+            <span>Inventory</span>
+        </li>
+        <li id="menu-clients" class="menu-item" onclick="window.location.href='clients.html'">
+            <i class="fas fa-users"></i>
+            <span>Clients</span>
+        </li>
         <li id="menu-settings" class="menu-item">
             <i class="fas fa-cog"></i>
             <span>Settings</span>
         </li>
-        <li id="menu-logout" class="menu-item">
+        <li id="menu-logout" class="menu-item" onclick="handleLogout()">
             <i class="fas fa-power-off"></i>
             <span>Logout</span>
         </li>
     </ul>
 </div>
+
+<script>
+    function handleLogout() {
+        if (confirm('Are you sure you want to logout?')) {
+            try {
+                // Clear ALL authentication data
+                localStorage.removeItem('authToken');
+                localStorage.removeItem('userName');
+                localStorage.removeItem('tokenTimestamp');
+                
+                // Force redirect to login page
+                window.location.replace('login.html');
+            } catch (error) {
+                console.error('Logout error:', error);
+                alert('Error during logout. Please try again.');
+            }
+        }
+    }
+
+    // Make the function globally available
+    window.handleLogout = handleLogout;
+
+    document.addEventListener('DOMContentLoaded', function() {
+        const userName = localStorage.getItem('userName');
+        if (userName) {
+            document.getElementById('current-user').textContent = userName;
+        }
+    });
+</script>

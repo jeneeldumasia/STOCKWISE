@@ -12,17 +12,18 @@ exports.addInward = async (req, res) => {
             commodity,
             weight,
             marking,
-            quantity
+            quantity,
+            userId: req.user.id // Associate with logged-in user
         });
 
         await inward.save();
 
         // Update inventory
         await Inventory.findOneAndUpdate(
-            { commodity, marking },
+            { commodity, marking, userId: req.user.id },
             { 
                 $inc: { quantity: quantity, weight: weight },
-                $setOnInsert: { commodity, marking }
+                $setOnInsert: { commodity, marking, userId: req.user.id }
             },
             { upsert: true, new: true }
         );
@@ -36,7 +37,7 @@ exports.addInward = async (req, res) => {
 
 exports.getInwards = async (req, res) => {
     try {
-        const inwards = await Inward.find().sort({ inwardDate: -1 });
+        const inwards = await Inward.find({ userId: req.user.id }).sort({ inwardDate: -1 });
         res.json({ success: true, data: inwards });
     } catch (error) {
         console.error('Error in getInwards:', error);
