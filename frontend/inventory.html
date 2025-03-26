@@ -94,15 +94,15 @@
 
     <script src="js/apiService.js"></script>
     <script>
-        document.addEventListener('DOMContentLoaded', async function() {
+        document.addEventListener('DOMContentLoaded', async function () {
             if (!requireAuth()) return;
-            
+
             try {
                 // Load menu
                 const menuResponse = await fetch('menu.html');
                 const menuHtml = await menuResponse.text();
                 document.getElementById('menu-bar').innerHTML = menuHtml;
-                
+
                 // Display username
                 const userName = localStorage.getItem('userName');
                 if (userName) {
@@ -111,18 +111,8 @@
                     userInfo.innerHTML = `<i class="fas fa-user"></i>${userName}`;
                     document.querySelector('.sidebar').insertBefore(userInfo, document.querySelector('.menu-list'));
                 }
-                
-                // Set active menu item
-                document.getElementById('menu-inventory').classList.add('active');
-                
-                await loadInventory();
-            } catch (error) {
-                console.error('Error initializing page:', error);
-            }
-        });
 
-        async function loadInventory() {
-            try {
+                // Fetch inventory data
                 const response = await fetch('http://localhost:5001/api/inventory', {
                     headers: {
                         'Authorization': `Bearer ${localStorage.getItem('authToken')}`
@@ -133,12 +123,11 @@
 
                 const { data: inventory } = await response.json();
                 displayInventory(inventory);
-                updateFilters(inventory);
             } catch (error) {
-                console.error('Error loading inventory:', error);
-                alert('Failed to load inventory');
+                console.error('Error initializing page:', error);
+                alert('Failed to load inventory. Please try again.');
             }
-        }
+        });
 
         function displayInventory(inventory) {
             const tbody = document.getElementById('inventory-list');

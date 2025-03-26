@@ -358,6 +358,9 @@
                 
                 const method = clientId ? 'PUT' : 'POST';
 
+                console.log('Sending request to:', url);
+                console.log('Request payload:', clientData);
+
                 const response = await fetch(url, {
                     method: method,
                     headers: {
@@ -367,13 +370,18 @@
                     body: JSON.stringify(clientData)
                 });
 
-                if (!response.ok) throw new Error('Failed to save client');
+                const result = await response.json();
+                console.log('Response:', result);
+
+                if (!response.ok) {
+                    throw new Error(result.error || 'Failed to save client');
+                }
 
                 hideClientModal();
                 await loadClients();
             } catch (error) {
                 console.error('Error saving client:', error);
-                alert('Failed to save client');
+                alert(`Failed to save client: ${error.message}`);
             }
         });
     </script>

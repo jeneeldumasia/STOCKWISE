@@ -136,30 +136,16 @@
                         <label for="party">Party Name:</label>
                         <select id="party" name="party" required>
                             <option value="">Select party</option>
-                            <option value="Party A">Party A</option>
-                            <option value="Party B">Party B</option>
-                            <option value="Party C">Party C</option>
-                            <option value="Party D">Party D</option>
-                            <option value="Party E">Party E</option>
-                            <option value="Other">Other</option>
+  
                         </select>
                     </div>
 
-                    <div class="form-group" id="otherPartyGroup" style="display: none;">
-                        <label for="otherParty">Other Party Name:</label>
-                        <input type="text" id="otherParty" name="otherParty" placeholder="Enter other party name">
-                    </div>
+                  
 
                     <div class="form-group">
                         <label for="commodity">Commodity:</label>
                         <select id="commodity" name="commodity" required>
                             <option value="">Select commodity</option>
-                            <option value="Cotton">Cotton</option>
-                            <option value="Wool">Wool</option>
-                            <option value="Sandal">Sandal</option>
-                            <option value="Silk">Silk</option>
-                            <option value="Linen">Linen</option>
-                            <option value="Polyester">Polyester</option>
                         </select>
                     </div>
 
@@ -326,5 +312,35 @@
             }
         });
     </script>
+    <script>
+    document.addEventListener('DOMContentLoaded', async function () {
+        if (!requireAuth()) return;
+
+        try {
+            // Fetch clients from the backend
+            const response = await fetch('http://localhost:5001/api/clients', {
+                headers: {
+                    'Authorization': `Bearer ${localStorage.getItem('authToken')}`
+                }
+            });
+
+            if (!response.ok) throw new Error('Failed to fetch clients');
+
+            const clients = await response.json();
+
+            // Populate the party dropdown with client names
+            const partyDropdown = document.getElementById('party');
+            clients.forEach(client => {
+                const option = document.createElement('option');
+                option.value = client.name;
+                option.textContent = client.name;
+                partyDropdown.appendChild(option);
+            });
+        } catch (error) {
+            console.error('Error loading clients:', error);
+            alert('Failed to load clients. Please try again.');
+        }
+    });
+</script>
 </body>
 </html>

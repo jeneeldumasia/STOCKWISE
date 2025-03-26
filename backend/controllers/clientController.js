@@ -5,7 +5,8 @@ exports.getClients = async (req, res) => {
         const clients = await Client.find({ userId: req.user.id });
         res.json(clients);
     } catch (error) {
-        res.status(500).json({ error: error.message });
+        console.error('Error fetching clients:', error);
+        res.status(500).json({ error: 'Server error while fetching clients' });
     }
 };
 
@@ -18,7 +19,11 @@ exports.addClient = async (req, res) => {
         await client.save();
         res.status(201).json(client);
     } catch (error) {
-        res.status(500).json({ error: error.message });
+        console.error('Error adding client:', error);
+        if (error.code === 11000) {
+            return res.status(400).json({ error: 'Client with this email already exists' });
+        }
+        res.status(500).json({ error: 'Server error while adding client' });
     }
 };
 

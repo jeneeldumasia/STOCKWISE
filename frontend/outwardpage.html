@@ -1,11 +1,8 @@
-
-
-
 <!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport"="width=device-width, initial-scale=1.0">
     <title>Outward Entry</title>
    
     <style>
@@ -141,12 +138,7 @@
                         <label for="party">Party Name:</label>
                         <select id="party" name="party" required>
                             <option value="">Select party</option>
-                            <option value="Party A">Party A</option>
-                            <option value="Party B">Party B</option>
-                            <option value="Party C">Party C</option>
-                            <option value="Party D">Party D</option>
-                            <option value="Party E">Party E</option>
-                            <option value="Other">Other</option>
+                           
                         </select>
                     </div>
 
@@ -407,6 +399,36 @@
         const logoutButton = document.getElementById('menu-logout');
         if (logoutButton) {
             logoutButton.addEventListener('click', handleLogout);
+        }
+    });
+</script>
+<script>
+    document.addEventListener('DOMContentLoaded', async function () {
+        if (!requireAuth()) return;
+
+        try {
+            // Fetch clients from the backend
+            const response = await fetch('http://localhost:5001/api/clients', {
+                headers: {
+                    'Authorization': `Bearer ${localStorage.getItem('authToken')}`
+                }
+            });
+
+            if (!response.ok) throw new Error('Failed to fetch clients');
+
+            const clients = await response.json();
+
+            // Populate the party dropdown with client names
+            const partyDropdown = document.getElementById('party');
+            clients.forEach(client => {
+                const option = document.createElement('option');
+                option.value = client.name;
+                option.textContent = client.name;
+                partyDropdown.appendChild(option);
+            });
+        } catch (error) {
+            console.error('Error loading clients:', error);
+            alert('Failed to load clients. Please try again.');
         }
     });
 </script>

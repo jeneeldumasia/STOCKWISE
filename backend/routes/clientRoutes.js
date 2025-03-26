@@ -1,14 +1,11 @@
 const express = require('express');
-const { getClients, addClient } = require('../controllers/clientController');
-const authMiddleware = require('../middleware/authMiddleware');
-
 const router = express.Router();
+const { getClients, addClient, updateClient, deleteClient } = require('../controllers/clientController');
+const authMiddleware = require('../middleware/authMiddleware');
 
 router.get('/', authMiddleware, getClients);
 router.post('/', authMiddleware, addClient);
+router.put('/:id', authMiddleware, updateClient);
+router.delete('/:id', authMiddleware, deleteClient);
 
 module.exports = router;
-
-// Add to backend/server.js
-const clientRoutes = require('./routes/clientRoutes');
-app.use('/api/clients', clientRoutes);
